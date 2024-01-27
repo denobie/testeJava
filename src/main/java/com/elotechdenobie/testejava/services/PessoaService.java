@@ -28,7 +28,11 @@ public class PessoaService {
     }
 
     public PessoaDTO insert(PessoaDTO pessoaDTO){
+        log.info(String.format("Iniciando inserção da Pessoa '%s'", pessoaDTO.getNome()));
+
         Pessoa pessoaSaved = this.pessoaRepository.save(PessoaDTO.toEntity(pessoaDTO));
+
+        log.info(String.format("Finalizando inserção da Pessoa '%s' id '%d'", pessoaDTO.getNome(), pessoaSaved.getId()));
 
         return PessoaDTO.fromEntity(pessoaSaved);
     }

@@ -7,11 +7,11 @@ public enum TipoPessoa {
     JURIDICA("J", CheckPessoaJuridica.class);
 
     private final String value;
-    private final Class<?> validationGroup;
+    private final Class<?> group;
 
-    TipoPessoa(String value, Class<?> validationGroup) {
+    TipoPessoa(String value, Class<?> group) {
         this.value = value;
-        this.validationGroup = validationGroup;
+        this.group = group;
     }
 
     @JsonValue
@@ -31,8 +31,8 @@ public enum TipoPessoa {
 
     }
 
-    public Class<?> getValidationGroup() {
-        return validationGroup;
+    public Class<?> getGroup() {
+        return group;
     }
 
     public String getDescricao() {
