@@ -50,12 +50,14 @@ public class Pessoa implements PessoaValidationGroupsQuery, Serializable {
     private String cpfCnpj;
 
     @Column(length = 1)
-    private TipoPessoa tipoPessoa = TipoPessoa.FISICA;
+    @NotNull(message = "TipoPessoa é obrigatório")
+    private TipoPessoa tipoPessoa;
 
 
     public Pessoa merge(Pessoa pessoaToMerge){
         this.setNome(pessoaToMerge.getNome());
         this.setCpfCnpj(pessoaToMerge.getCpfCnpj());
+        this.setTipoPessoa(pessoaToMerge.getTipoPessoa());
 
         return this;
     }
