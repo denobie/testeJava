@@ -7,9 +7,6 @@ import org.springframework.http.HttpStatus;
 
 import java.io.Serializable;
 import java.time.Instant;
-
-import static org.springframework.util.StringUtils.hasLength;
-
 @Data
 public class StandardError implements Serializable {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'", timezone = "GMT")
