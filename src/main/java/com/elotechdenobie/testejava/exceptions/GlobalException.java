@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 @ControllerAdvice
-public class GlobalResourceException {
+public class GlobalException {
 
     private HttpHeaders generateHeaders() {
         HttpHeaders httpHeaders = new HttpHeaders();
