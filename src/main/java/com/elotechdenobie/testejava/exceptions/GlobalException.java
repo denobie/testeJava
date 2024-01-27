@@ -1,6 +1,7 @@
 package com.elotechdenobie.testejava.exceptions;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,5 +41,19 @@ public class GlobalException {
                                         e.getMessage(),
                                         request.getRequestURI(),
                                         "DataBaseException"));
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<StandardError> constraintViolationException(RuntimeException e, HttpServletRequest request){
+        Throwable throwable = e.getCause();
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .headers(generateHeaders())
+                .body(new StandardError(LocalDateTime.now().atZone(ZoneId.of("America/Sao_Paulo")).toInstant(),
+                        HttpStatus.BAD_REQUEST,
+                        e.getMessage(),
+                        request.getRequestURI(),
+                        ""));
     }
 }
