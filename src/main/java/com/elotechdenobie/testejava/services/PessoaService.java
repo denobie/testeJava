@@ -4,6 +4,7 @@ import com.elotechdenobie.testejava.dto.PessoaDTO;
 import com.elotechdenobie.testejava.entities.Pessoa;
 import com.elotechdenobie.testejava.exceptions.DataBaseException;
 import com.elotechdenobie.testejava.exceptions.RestException;
+import com.elotechdenobie.testejava.exceptions.ValidationException;
 import com.elotechdenobie.testejava.repositories.PessoaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +30,12 @@ public class PessoaService {
 
     public PessoaDTO insert(PessoaDTO pessoaDTO){
         log.info(String.format("Iniciando inserção da Pessoa '%s'", pessoaDTO.getNome()));
+
+        Pessoa pessoaFound = this.pessoaRepository.findByCpfCnpj(pessoaDTO.getCpfCnpj());
+
+        if (pessoaFound != null){
+            throw new ValidationException(String.format("CPF/CNPJ Já cadastrado para a Pessoa '%d'", pessoaFound.getId()));
+        }
 
         Pessoa pessoaSaved = this.pessoaRepository.save(PessoaDTO.toEntity(pessoaDTO));
 

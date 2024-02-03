@@ -19,6 +19,7 @@ public class GlobalException {
         httpHeaders.add("Teste-Java-Exception", "true");
         return httpHeaders;
     }
+
     @ExceptionHandler(RestException.class)
     public ResponseEntity<StandardError> resourceNotFound(RuntimeException e, HttpServletRequest request){
         return ResponseEntity
@@ -55,5 +56,17 @@ public class GlobalException {
                         e.getMessage(),
                         request.getRequestURI(),
                         ""));
+    }
+
+    @ExceptionHandler(ValidationException.class)
+    public ResponseEntity<StandardError> validationException(RuntimeException e, HttpServletRequest request){
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .headers(generateHeaders())
+                .body(new StandardError(LocalDateTime.now().atZone(ZoneId.of("America/Sao_Paulo")).toInstant(),
+                        HttpStatus.BAD_REQUEST,
+                        e.getMessage(),
+                        request.getRequestURI(),
+                        "ValidationException"));
     }
 }
