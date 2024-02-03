@@ -24,8 +24,4 @@ public class PessoaGroupSequenceProvider implements DefaultGroupSequenceProvider
         }
         return Collections.singletonList(Pessoa.class);
     }
-
-    protected boolean isPessoaSelected(Pessoa pessoa){
-        return pessoa != null && pessoa.getTipoPessoa() != null;
-    }
 }

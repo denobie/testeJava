@@ -1,6 +1,7 @@
 package com.elotechdenobie.testejava.resources;
 
 import com.elotechdenobie.testejava.dto.PessoaDTO;
+import com.elotechdenobie.testejava.entities.Pessoa;
 import com.elotechdenobie.testejava.services.PessoaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

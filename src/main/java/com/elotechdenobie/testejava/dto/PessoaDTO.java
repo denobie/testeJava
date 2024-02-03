@@ -2,7 +2,6 @@ package com.elotechdenobie.testejava.dto;
 
 import com.elotechdenobie.testejava.entities.Pessoa;
 import com.elotechdenobie.testejava.enumerable.TipoPessoa;
-import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 
@@ -12,14 +11,14 @@ public class PessoaDTO {
     private Long id;
     private String nome;
     private String cpfCnpj;
-    private TipoPessoa tipoPessoa;
+    private String tipoPessoa;
 
     public static PessoaDTO fromEntity(Pessoa pessoa) {
         return PessoaDTO.builder()
                 .id(pessoa.getId())
                 .nome(pessoa.getNome())
                 .cpfCnpj(pessoa.getCpfCnpj())
-                .tipoPessoa(pessoa.getTipoPessoa())
+                .tipoPessoa(pessoa.getTipoPessoa().getValue())
                 .build();
     }
 
@@ -28,7 +27,7 @@ public class PessoaDTO {
                 .id(pessoaDTO.getId())
                 .nome(pessoaDTO.getNome())
                 .cpfCnpj(pessoaDTO.getCpfCnpj())
-                .tipoPessoa(pessoaDTO.getTipoPessoa())
+                .tipoPessoa(TipoPessoa.fromValue(pessoaDTO.getTipoPessoa()))
                 .build();
     }
 }

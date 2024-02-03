@@ -3,9 +3,13 @@ package com.elotechdenobie.testejava.entities;
 import com.elotechdenobie.testejava.enumerable.CheckPessoaFisica;
 import com.elotechdenobie.testejava.enumerable.CheckPessoaJuridica;
 import com.elotechdenobie.testejava.enumerable.TipoPessoa;
+import com.elotechdenobie.testejava.enumerable.converter.TipoPessoaEnumConverter;
 import com.elotechdenobie.testejava.validation.PessoaGroupSequenceProvider;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -48,10 +52,10 @@ public class Pessoa implements Serializable {
     @CNPJ(groups = CheckPessoaJuridica.class)
     private String cpfCnpj;
 
-    @Column(name = "tipopessoa") //não sei pq, mas o hibernate está jogando tipo_pessoa no sql.
+    @Column(name = "tipopessoa", length = 1)
     @NotNull(message = "TipoPessoa é obrigatório")
+    @Convert(converter = TipoPessoaEnumConverter.class)
     private TipoPessoa tipoPessoa;
-
 
     public Pessoa merge(Pessoa pessoaToMerge){
         this.setNome(pessoaToMerge.getNome());
