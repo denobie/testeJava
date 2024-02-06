@@ -58,7 +58,7 @@ public class PessoaService {
         log.info(String.format("Iniciando atualização da Pessoa '%d'", idUpdate));
 
         if (!requestPessoaDTO.getId().equals(idUpdate)){
-            throw new RuntimeException(String.format("Id '%d' da seção diferente do id '%d' do Request", idUpdate, requestPessoaDTO.getId()));
+            throw new ValidationException(String.format("Id da seção '%d' diferente do id do Request '%d'", idUpdate, requestPessoaDTO.getId()));
         }
 
         Pessoa pessoaSaved = this.pessoaRepository.save(prepareToMerge(PessoaDTO.toEntity(requestPessoaDTO)));

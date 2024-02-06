@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @Builder
@@ -14,20 +16,16 @@ public class DebitoDTO {
     private LocalDate dataLancamento;
     @JsonProperty("pessoa")
     private PessoaDTO pessoaDTO;
+    @JsonProperty("parcela")
+    @Builder.Default
+    private List<DebitoParcelaDTO> debitoParcelaDTO = new ArrayList<>();
 
     public static DebitoDTO fromEntity(Debito debito){
         return DebitoDTO.builder()
                 .id(debito.getId())
                 .dataLancamento(debito.getDataLancamento())
                 .pessoaDTO(PessoaDTO.fromEntity(debito.getPessoa()))
+                .debitoParcelaDTO(debito.getDebitoParcela().stream().map(DebitoParcelaDTO::fromEntity).toList())
                 .build();
     }
-
-   public static Debito toEntity(DebitoDTO debitoDTO){
-        return Debito.builder()
-                .id(debitoDTO.getId())
-                .dataLancamento(debitoDTO.getDataLancamento())
-                .pessoa(PessoaDTO.toEntity(debitoDTO.getPessoaDTO()))
-                .build();
-   }
 }
