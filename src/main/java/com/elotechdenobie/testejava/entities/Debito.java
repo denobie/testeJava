@@ -1,5 +1,6 @@
 package com.elotechdenobie.testejava.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -12,7 +13,6 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.PastOrPresent;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -42,5 +42,16 @@ public class Debito implements Serializable {
     private LocalDate dataLancamento;
 
     @OneToMany(mappedBy = "debito", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<DebitoParcela> debitoParcela = new ArrayList<>();
+    private List<DebitoParcela> debitoParcelas = new ArrayList<>();
+
+    @JsonIgnore
+    public Long getNextParcela() {
+        if (this.getDebitoParcelas() != null) {
+            return this.getDebitoParcelas().stream()
+                    .map(DebitoParcela::getParcela)
+                    .reduce(0L, Long::max) + 1L;
+        }
+
+        return 1L;
+    }
 }

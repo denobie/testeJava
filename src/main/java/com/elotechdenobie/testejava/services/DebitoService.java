@@ -3,14 +3,15 @@ package com.elotechdenobie.testejava.services;
 import com.elotechdenobie.testejava.dto.DebitoDTO;
 import com.elotechdenobie.testejava.dto.DebitoParcelaDTO;
 import com.elotechdenobie.testejava.dto.DebitoPostDTO;
+import com.elotechdenobie.testejava.dto.DebitoResumoDTO;
 import com.elotechdenobie.testejava.entities.Debito;
+import com.elotechdenobie.testejava.entities.DebitoParcela;
 import com.elotechdenobie.testejava.entities.Pessoa;
-import com.elotechdenobie.testejava.entities.SituacaoParcela;
+import com.elotechdenobie.testejava.enumerable.SituacaoParcela;
 import com.elotechdenobie.testejava.exceptions.RestException;
 import com.elotechdenobie.testejava.exceptions.ValidationException;
 import com.elotechdenobie.testejava.repositories.DebitoRepository;
 import com.elotechdenobie.testejava.repositories.PessoaRepository;
-import com.elotechdenobie.testejava.repositories.SituacaoParcelaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -29,7 +30,6 @@ import java.util.Objects;
 public class DebitoService {
     private final DebitoRepository debitoRepository;
     private final PessoaRepository pessoaRepository;
-    private final SituacaoParcelaRepository situacaoParcelaRepository;
     public DebitoDTO insert(DebitoPostDTO debitoPostDTO){
         log.info("Iniciando inserção de um novo débito");
 
@@ -45,6 +45,16 @@ public class DebitoService {
 
         log.info(String.format("Finalizado inserção de um novo débito id '%d'", debitoSaved.getId()));
         return DebitoDTO.fromEntity(debitoSaved);
+    }
+
+    public void delete(Long id){
+        log.info(String.format("Iniciando exclusão do débito '%d'", id));
+
+        Debito debitoToDelete = this.debitoFound(id);
+
+        this.debitoRepository.delete(debitoToDelete);
+
+        log.info(String.format("Finalizado exclusão do débito '%d'", id));
     }
 
     public DebitoDTO insertParcelaIntoDebito(Long id, DebitoPostDTO debitoPostDTO){
@@ -65,14 +75,12 @@ public class DebitoService {
     private void addParcelasIntoDebito(Debito debitoToSave, DebitoPostDTO debitoPostDTO) {
         debitoPostDTO.getParcelas().stream().map(
                 debitoParcelaDTO -> {
-                    SituacaoParcela situacaoParcela = this.situacaoParcelaRepository.findById(debitoParcelaDTO.getSituacaoParcela().getId())
-                            .orElseThrow(() -> new ValidationException(String.format("Situação Parcela '%d' da parcela '%d' não encontrada",
-                                                                                     debitoParcelaDTO.getSituacaoParcela().getId(),
-                                                                                     debitoParcelaDTO.getParcela())));
+                    DebitoParcela debitoParcelaToSave = DebitoParcelaDTO.toEntity(debitoParcelaDTO, debitoToSave, SituacaoParcela.ABERTA);
+                    debitoParcelaToSave.setParcela(debitoToSave.getNextParcela());
 
-                    return DebitoParcelaDTO.toEntity(debitoParcelaDTO, debitoToSave, situacaoParcela);
+                    return debitoParcelaToSave;
                 }
-        ).forEach(debitoToSave.getDebitoParcela()::add);
+        ).forEach(debitoToSave.getDebitoParcelas()::add);
     }
 
     public DebitoDTO findById(Long id){
@@ -108,7 +116,42 @@ public class DebitoService {
         return new PageImpl<>(listDebitosDTO, pageable, allDebitosDTO.size());
     }
 
+    public DebitoDTO prorrogaParcela(Long id, Long parcela, LocalDate novaDataVencimento) {
+        log.info(String.format("Iniciando prorrogação da Data de Vencimento da parcela '%d' do débito '%d'", parcela, id));
+
+        Debito debitoToUpdate = debitoFound(id);
+
+        DebitoParcela debitoParcelaToUpdate = debitoToUpdate.getDebitoParcelas().stream()
+                .filter(debitoParcela -> debitoParcela.getParcela().equals(parcela))
+                .findFirst().orElseThrow(() -> new ValidationException(String.format("Parcela '%d' não encontrada para o Débito '%d'", parcela, debitoToUpdate.getId())));
+
+        debitoParcelaToUpdate.setDataVencimento(novaDataVencimento);
+
+        this.debitoRepository.save(debitoToUpdate);
+
+        log.info(String.format("Finalizado prorrogação da Data de Vencimento da parcela '%d' do débito '%d'", parcela, id));
+        return DebitoDTO.fromEntity(debitoToUpdate);
+    }
+
+    public DebitoResumoDTO getValorTotalDebitosLancados(){
+        return DebitoResumoDTO.of(this.debitoRepository.findValorTotalDebitosLancados(), null, null);
+    }
+
+    public DebitoResumoDTO getValorTotalDebitosPagos(){
+        return DebitoResumoDTO.of(null, null, this.debitoRepository.findValorTotalDebitosPagos());
+    }
+
+    public DebitoResumoDTO getValorTotalDebitosCancelados(){
+        return DebitoResumoDTO.of(null, this.debitoRepository.findValorTotalDebitosCancelados(), null);
+    }
+
+    public DebitoResumoDTO getResumoDebitos(){
+        return DebitoResumoDTO.of(this.debitoRepository.findValorTotalDebitosLancados(),
+                                  this.debitoRepository.findValorTotalDebitosCancelados(),
+                                  this.debitoRepository.findValorTotalDebitosPagos());
+    }
+
     private Debito debitoFound(Long id){
-        return this.debitoRepository.findById(id).orElseThrow(() -> new ValidationException(String.format("Débito não encontrado para o '%d'.", id)));
+        return this.debitoRepository.findById(id).orElseThrow(() -> new ValidationException(String.format("Débito '%d' não encontrado.", id)));
     }
 }

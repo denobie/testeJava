@@ -25,7 +25,7 @@ public class DebitoDTO {
                 .id(debito.getId())
                 .dataLancamento(debito.getDataLancamento())
                 .pessoaDTO(PessoaDTO.fromEntity(debito.getPessoa()))
-                .debitoParcelaDTO(debito.getDebitoParcela().stream().map(DebitoParcelaDTO::fromEntity).toList())
+                .debitoParcelaDTO(debito.getDebitoParcelas().stream().map(DebitoParcelaDTO::fromEntity).toList())
                 .build();
     }
 }
