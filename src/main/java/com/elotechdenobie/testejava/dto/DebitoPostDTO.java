@@ -20,6 +20,7 @@ public class DebitoPostDTO {
     @JsonProperty("pessoa")
     private Long pessoa;
     @NotNull
+    @Valid
     private List<DebitoParcelaDTO> parcelas = new ArrayList<>();
 
    public static Debito toEntity(DebitoPostDTO debitoDTO){

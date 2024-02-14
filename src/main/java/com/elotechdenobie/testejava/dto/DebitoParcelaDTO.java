@@ -4,6 +4,7 @@ import com.elotechdenobie.testejava.entities.Debito;
 import com.elotechdenobie.testejava.entities.DebitoParcela;
 import com.elotechdenobie.testejava.entities.SituacaoParcela;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.Positive;
 import lombok.Builder;
 import lombok.Data;
 
@@ -15,7 +16,8 @@ import java.util.Optional;
 @Builder
 public class DebitoParcelaDTO {
     private Long parcela;
-    private BigDecimal valor;
+    @Positive
+    private BigDecimal valor = BigDecimal.ZERO;
     private LocalDate dataLancamento;
     private LocalDate dataVencimento;
     private LocalDate dataPagamento;
