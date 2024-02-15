@@ -2,13 +2,15 @@ package com.elotechdenobie.testejava.repositories;
 
 import com.elotechdenobie.testejava.entities.Debito;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
-public interface DebitoRepository extends JpaRepository<Debito, Long> {
+public interface DebitoRepository extends JpaRepository<Debito, Long>, JpaSpecificationExecutor<Debito> {
+
     List<Debito> findAllByPessoaId(Long id);
 
     List<Debito> findAllByDataLancamentoBetween(LocalDate dataInicial, LocalDate dataFinal);

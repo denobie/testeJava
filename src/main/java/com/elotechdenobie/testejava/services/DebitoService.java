@@ -12,11 +12,14 @@ import com.elotechdenobie.testejava.exceptions.RestException;
 import com.elotechdenobie.testejava.exceptions.ValidationException;
 import com.elotechdenobie.testejava.repositories.DebitoRepository;
 import com.elotechdenobie.testejava.repositories.PessoaRepository;
+import com.elotechdenobie.testejava.specifications.DebitoSpecifications;
+import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -105,7 +108,7 @@ public class DebitoService {
     public Page<DebitoDTO> findAllByPriodoDataLancamento(Pageable pageable, LocalDate dataInicial, LocalDate dataFinal){
 
         dataFinal = Objects.isNull(dataFinal) ? dataInicial : dataFinal;
-
+        //Como não vai dar tempo para alterar, aqui eu mudaria para buscar a data de lancamento da parcela.
         List<DebitoDTO> allDebitosDTO = this.debitoRepository.findAllByDataLancamentoBetween(dataInicial, dataFinal)
                                             .stream().map(DebitoDTO::fromEntity).toList();
 
@@ -153,5 +156,56 @@ public class DebitoService {
 
     private Debito debitoFound(Long id){
         return this.debitoRepository.findById(id).orElseThrow(() -> new ValidationException(String.format("Débito '%d' não encontrado.", id)));
+    }
+
+    //Aqui eu criaria um novo método e endpoint para que fosse possível movimentar todas as parcelas EM ABERTO do débito, percorrendo a lista checando se está EM ABERTO e fazendo o pagamento.
+    public void movimentaParcela(Long id, Long parcela, SituacaoParcela situacaoParcela) {
+        log.info(String.format("Iniciando movimentação da parcela '%d' do débito '%d' para '%s'", parcela, id, situacaoParcela.getDescricao()));
+
+        Debito debitoToUpdate = debitoFound(id);
+
+        DebitoParcela debitoParcelaToUpdate = debitoToUpdate.getDebitoParcelas().stream()
+                .filter(debitoParcela -> debitoParcela.getParcela().equals(parcela))
+                .findFirst().orElseThrow(() -> new ValidationException(String.format("Parcela '%d' não encontrada para o Débito '%d'", parcela, debitoToUpdate.getId())));
+
+        if (debitoParcelaToUpdate.getSituacaoParcela().equals(SituacaoParcela.ABERTA)) {
+            if (situacaoParcela.equals(SituacaoParcela.PAGA)) {
+                debitoParcelaToUpdate.setDataPagamento(LocalDate.now());
+            } else {
+                debitoParcelaToUpdate.setDataCancelamento(LocalDate.now());
+            }
+        }
+        else {
+            throw new ValidationException(String.format("Para movimentar a parcela para '%s' ela precisa estar EM ABERTO. Situação atual '%s'", situacaoParcela.getDescricao(), debitoParcelaToUpdate.getSituacaoParcela().getDescricao()));
+        }
+
+        debitoParcelaToUpdate.setSituacaoParcela(situacaoParcela);
+
+        this.debitoRepository.save(debitoToUpdate);
+
+        log.info(String.format("Finalizado movimentação da parcela '%d' do débito '%d' para '%s'", parcela, id, situacaoParcela.getDescricao()));
+    }
+
+    public Page<DebitoDTO> findByCustomCriteria(LocalDate dataInicial, LocalDate dataFinal, String nome, String cpfCnpj, Pageable pageable){
+
+        dataFinal = Objects.isNull(dataFinal) ? dataInicial : dataFinal;
+
+        Specification<Debito> specification = Specification.where(DebitoSpecifications.byDataLancamentoBetween(dataInicial, dataFinal));
+
+        if (StringUtils.isNotBlank(nome)){
+            specification = specification.and(DebitoSpecifications.byNome(nome));
+        }
+
+        if (StringUtils.isNotBlank(cpfCnpj)){
+            specification = specification.and(DebitoSpecifications.byCpfCnpj(cpfCnpj));
+        }
+
+        List<DebitoDTO> allDebitoDTOS = this.debitoRepository.findAll(specification, pageable).stream().map(DebitoDTO::fromEntity).toList();
+
+        List<DebitoDTO> listDebitosDTO = allDebitoDTOS.stream()
+                .skip(pageable.getOffset())
+                .limit(pageable.getPageSize()).toList();
+
+        return new PageImpl<>(listDebitosDTO, pageable, allDebitoDTOS.size());
     }
 }

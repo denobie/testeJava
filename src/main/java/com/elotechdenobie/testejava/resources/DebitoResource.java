@@ -4,6 +4,7 @@ import com.elotechdenobie.testejava.dto.DebitoDTO;
 import com.elotechdenobie.testejava.dto.DebitoPostDTO;
 import com.elotechdenobie.testejava.dto.DebitoResumoDTO;
 import com.elotechdenobie.testejava.dto.UpdateDebitoParcelaDTO;
+import com.elotechdenobie.testejava.enumerable.SituacaoParcela;
 import com.elotechdenobie.testejava.services.DebitoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -35,11 +36,11 @@ public class DebitoResource {
     }
 
     @GetMapping
-    public ResponseEntity<Page<DebitoDTO>> findByAll(Pageable pageable){
+    public ResponseEntity<Page<DebitoDTO>> findAll(Pageable pageable){
         return ResponseEntity.ok(this.debitoService.findAll(pageable));
     }
 
-    @GetMapping("/by-pessoa/{id}")
+    @GetMapping("/by-pessoa/{id}") //Extrato de débitos por pessoa
     public ResponseEntity<Page<DebitoDTO>> findAllByPessoa(Pageable pageable, @PathVariable Long id){
         return ResponseEntity.ok(this.debitoService.findAllByPessoa(pageable, id));
     }
@@ -81,15 +82,38 @@ public class DebitoResource {
         return ResponseEntity.ok(this.debitoService.insertParcelaIntoDebito(id, debitoPostDTO));
     }
 
+    @PostMapping("/{id}/paga-parcela/{parcela}")
+    public ResponseEntity<Void> pagaParcela(@PathVariable Long id, @PathVariable Long parcela){
+        this.debitoService.movimentaParcela(id, parcela, SituacaoParcela.PAGA);
+
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{id}/cancela-parcela/{parcela}")
+    public ResponseEntity<Void> cancelaParcela(@PathVariable Long id, @PathVariable Long parcela){
+        this.debitoService.movimentaParcela(id, parcela, SituacaoParcela.CANCELADA);
+
+        return ResponseEntity.ok().build();
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id){
         this.debitoService.delete(id);
 
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok().build();
     }
 
     @PutMapping("/{id}/prorroga-parcela/{parcela}")
     public ResponseEntity<DebitoDTO> prorrogaParcela(@PathVariable Long id, @PathVariable Long parcela, @RequestBody @Valid UpdateDebitoParcelaDTO updateDebitoParcelaDTO){
         return ResponseEntity.ok(this.debitoService.prorrogaParcela(id, parcela, updateDebitoParcelaDTO.getNovaDataVencimento()));
+    }
+
+    @GetMapping("/pesquisa") //Paginação e possibilidade de filtrar por data de lançamento, cpf e nome da pessoa
+    public ResponseEntity<Page<DebitoDTO>> findByPesquisa(Pageable pageable,
+                                                          @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicial,
+                                                          @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFinal,
+                                                          @RequestParam(required = false) String nomePessoa,
+                                                          @RequestParam(required = false) String cpfCnpj){
+        return ResponseEntity.ok(this.debitoService.findByCustomCriteria(dataInicial, dataFinal, nomePessoa, cpfCnpj, pageable));
     }
 }
